@@ -13,22 +13,44 @@ function Home() {
     const {userData}=useSelector(state=>state.user)
     const dispatch=useDispatch()
     const handleLogin = async (token) => {
-        try {
-            const { data } = await api.post("/api/auth/login", { token })
-            dispatch(setUserdata(data))
-        } catch (error) {
-            console.log(error)
-        }
+    try {
+        const { data } = await api.post("/api/auth/login", { token });
+        console.log("Backend login successful:", data);
+        dispatch(setUserdata(data));
+        return data;
+    } catch (error) {
+        console.error("Backend login failed:", {
+            status: error.response?.status,
+            response: error.response?.data,
+            message: error.message
+        });
+        throw error;
     }
+ };
 
+const googleLogin = async () => {
+    try {
+        console.log("Step 1: Starting Google sign-in");
 
-    const googleLogin = async () => {
-        const data = await signInWithPopup(auth, googleProvider)
-        const token = await data.user.getIdToken()
-        console.log(token)
-        await handleLogin(token)
-        console.log(data)
+        const result = await signInWithPopup(auth, googleProvider);
+        console.log("Step 2: Google sign-in successful");
+
+        const token = await result.user.getIdToken();
+        console.log("Step 3: Firebase ID token obtained");
+
+        await handleLogin(token);
+        console.log("Step 4: Backend login successful");
+
+    } catch (error) {
+        console.error("Google login failed:", {
+            code: error.code,
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+        });
     }
+};
+  
     return (
         <div className='h-screen  flex bg-[#0d0f14] text-white overflow-hidden'>
 
