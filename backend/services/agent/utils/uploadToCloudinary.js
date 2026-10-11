@@ -24,6 +24,7 @@ export const uploadToCloudinary = async (fileBuffer, filename) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: "raw",
+                type: "upload",
                 public_id: publicId,
                 overwrite: true,
                 use_filename: false,
