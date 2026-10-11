@@ -63,7 +63,7 @@ ${state.prompt}
 _Link expires in 10 minutes._`
         }
 
-    }  catch (error) {
+    } catch (error) {
     console.error("PDF AGENT ERROR:", error);
     console.error("PDF ERROR MESSAGE:", error?.message);
     console.error("PDF ERROR RESPONSE:", error?.response?.data);
@@ -72,4 +72,4 @@ _Link expires in 10 minutes._`
         ...state,
         aiResponse: `PDF generation failed: ${error?.message || "Unknown error"}`
     };
-}
+}}
