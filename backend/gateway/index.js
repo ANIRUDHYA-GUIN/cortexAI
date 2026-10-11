@@ -17,8 +17,18 @@ app.use(cors({
 }))
 app.use(morgan("dev"))
 app.use(cookieParser())
+// app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
+//     proxyReqPathResolver: (req) => `/api/auth${req.url}`
+// }))
+
 app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
-    proxyReqPathResolver: (req) => `/api/auth${req.url}`
+    proxyReqPathResolver: (req) => `/api/auth${req.url}`,
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+        if (srcReq.headers.cookie) {
+            proxyReqOpts.headers.cookie = srcReq.headers.cookie
+        }
+        return proxyReqOpts
+    }
 }))
 app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
 app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
