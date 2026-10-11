@@ -19,7 +19,7 @@ export const uploadToCloudinary = async (fileBuffer, filename) => {
     }
 
     return new Promise((resolve, reject) => {
-        const publicId = filename.replace(/\.(pdf|pptx)$/i, "");
+        const publicId = filename;
 
         const uploadStream = cloudinary.uploader.upload_stream(
             {
