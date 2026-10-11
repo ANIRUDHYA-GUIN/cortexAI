@@ -9,7 +9,11 @@ cloudinary.config({
     secure: true
 });
 
-export const uploadToCloudinary = async (fileBuffer, filename) => {
+export const uploadToCloudinary = async (
+    fileBuffer,
+    filename,
+    resourceType = "raw"
+) => {
     if (
         !process.env.CLOUDINARY_CLOUD_NAME ||
         !process.env.CLOUDINARY_API_KEY ||
@@ -18,12 +22,19 @@ export const uploadToCloudinary = async (fileBuffer, filename) => {
         throw new Error("Cloudinary environment variables are missing");
     }
 
-    return new Promise((resolve, reject) => {
-        const publicId = filename;
+    if (!Buffer.isBuffer(fileBuffer) || fileBuffer.length === 0) {
+        throw new Error("File buffer is empty or invalid");
+    }
 
+    const publicId =
+        resourceType === "image"
+            ? filename.replace(/\.[^.]+$/, "")
+            : filename;
+
+    return new Promise((resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
             {
-                resource_type: "raw",
+                resource_type: resourceType,
                 type: "upload",
                 public_id: publicId,
                 overwrite: true,
@@ -41,8 +52,8 @@ export const uploadToCloudinary = async (fileBuffer, filename) => {
                     );
                 }
 
-                console.log("Cloudinary upload:", {
-                    resource_type: result.resource_type,
+                console.log("Cloudinary upload successful:", {
+                    resourceType: result.resource_type,
                     format: result.format,
                     bytes: result.bytes,
                     url: result.secure_url
