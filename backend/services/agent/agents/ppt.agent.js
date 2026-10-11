@@ -1,80 +1,101 @@
-import { getModel } from "../config/llmModels.js"
-import { generatePpt } from "../utils/generatePpt.js"
-import { getFromS3 } from "../utils/getFromS3.js"
-import { uploadToS3 } from "../utils/uploadToS3.js"
-import { deductCredits } from "../utils/deductCredits.js"
-import { checkAgentLimit } from "../config/agentLimit.js"
-export const pptAgent=async (state) => {
+import { getModel } from "../config/llmModels.js";
+import { generatePpt } from "../utils/generatePpt.js";
+import { uploadToCloudinary } from "../utils/uploadToCloudinary.js";
+import { deductCredits } from "../utils/deductCredits.js";
+import { checkAgentLimit } from "../config/agentLimit.js";
+
+export const pptAgent = async (state) => {
     try {
-        await checkAgentLimit(state.userId,"ppt")
-        const llm=await getModel("ppt")
-        const prompt=`You are a professional presentation designer.
+        // Check PPT agent rate limit
+        await checkAgentLimit(state.userId, "ppt");
+
+        // Get LLM model
+        const llm = await getModel("ppt");
+
+        // Create prompt
+        const prompt = `
+You are a professional presentation designer.
 
 Return ONLY valid JSON.
 
 Format:
-
 {
-"title":"",
-"subtitle":"",
-"slides":[
-{
-"title":"",
-"points":[
-"",
-"",
-"",
-""
-]
-}
-]
+  "title": "",
+  "subtitle": "",
+  "slides": [
+    {
+      "title": "",
+      "points": ["", "", "", ""]
+    }
+  ]
 }
 
 Rules:
-
 - Generate exactly 6 content slides.
 - Each slide should have 4-6 concise bullet points.
 - No markdown.
 - No explanation.
 - No code block.
-- Return ONLY JSON.
+- Return ONLY valid JSON.
 
 Topic:
+${state.prompt}
+`;
 
-${state.prompt}`
+        // Generate presentation content
+        const res = await llm.invoke(prompt);
 
-const res=await llm.invoke(prompt)
-const data=JSON.parse(res.content)
-await deductCredits(state.userId,"ppt")
-const ppt=await generatePpt(data)
-const buffer=await ppt.write({
-    outputType:"nodebuffer"
-})
+        // Parse JSON response
+        const content = typeof res.content === "string"
+            ? res.content
+            : JSON.stringify(res.content);
 
-const filename=`ppt-${Date.now()}.pptx`
+        const data = JSON.parse(content);
 
-await uploadToS3(filename,buffer,"application/vnd.openxmlformats-officedocument.presentationml.presentation")
-const downloadUrl=await getFromS3(filename,24*60*60)
+        // Generate PPT file
+        const ppt = await generatePpt(data);
 
-return {
-    ...state,
-    aiResponse:`# ✅ Presentation Generated
+        // Convert PPT to buffer
+        const buffer = await ppt.write({
+            outputType: "nodebuffer"
+        });
+
+        // Upload PPT to Cloudinary
+        const filename = `ppt-${Date.now()}.pptx`;
+
+        const downloadUrl = await uploadToCloudinary(
+            buffer,
+            filename
+        );
+
+        // Deduct credits only after successful upload
+        await deductCredits(state.userId, "ppt");
+
+        // Return download link
+        return {
+            ...state,
+            aiResponse: `# Presentation Generated
 
 **${data.title}**
 
 📥 [Download PPT](${downloadUrl})
 
-_Link expires in 10 minutes._`
-}
+Your presentation is ready to download.`
+        };
 
     } catch (error) {
-        console.log(error)
-         return {
-            ...state,
-            aiResponse:error?.data?.message || "failed to generate ppt"
-        }
-       
+        console.error("PPT AGENT ERROR:", error);
+        console.error("PPT ERROR MESSAGE:", error?.message);
+        console.error(
+            "PPT ERROR RESPONSE:",
+            error?.response?.data
+        );
 
-       
+        return {
+            ...state,
+            aiResponse: `PPT generation failed: ${
+                error?.message || "Unknown error"
+            }`
+        };
     }
-}
+};
