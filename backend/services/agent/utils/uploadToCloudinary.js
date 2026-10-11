@@ -9,7 +9,7 @@ cloudinary.config({
     secure: true
 });
 
-export const uploadToCloudinary = async (pdfBuffer, filename) => {
+export const uploadToCloudinary = async (fileBuffer, filename) => {
     if (
         !process.env.CLOUDINARY_CLOUD_NAME ||
         !process.env.CLOUDINARY_API_KEY ||
@@ -19,25 +19,38 @@ export const uploadToCloudinary = async (pdfBuffer, filename) => {
     }
 
     return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
+        const publicId = filename.replace(/\.(pdf|pptx)$/i, "");
+
+        const uploadStream = cloudinary.uploader.upload_stream(
             {
                 resource_type: "raw",
-                public_id: filename,
-                overwrite: true
+                public_id: publicId,
+                overwrite: true,
+                use_filename: false,
+                unique_filename: false
             },
             (error, result) => {
-                if (error) return reject(error);
+                if (error) {
+                    return reject(error);
+                }
 
                 if (!result?.secure_url) {
                     return reject(
-                        new Error("Cloudinary returned no PDF URL")
+                        new Error("Cloudinary returned no file URL")
                     );
                 }
+
+                console.log("Cloudinary upload:", {
+                    resource_type: result.resource_type,
+                    format: result.format,
+                    bytes: result.bytes,
+                    url: result.secure_url
+                });
 
                 resolve(result.secure_url);
             }
         );
 
-        Readable.from(pdfBuffer).pipe(stream);
+        Readable.from(fileBuffer).pipe(uploadStream);
     });
 };
