@@ -25,10 +25,14 @@ export const getModel=async (agent)=>{
             return groq;
         case "search" :    
            return groq;
+           
         case "coding": 
            return openrouter; 
+
         case "imageAnalyzer": 
-           return gemini;   
+           return gemini; 
+        case "pdf-rag":
+            return groq;     
     
         default:
             return groq;
