@@ -1,3 +1,71 @@
+// import express from "express"
+// import dotenv from "dotenv"
+// import proxy from "express-http-proxy"
+// dotenv.config()
+// import cors from "cors"
+// import cookieParser from "cookie-parser"
+// import { getCurrentUser } from "./controllers/user.controller.js"
+// import protect from "./middleware/auth.middleware.js"
+// import { proxyWithHeader } from "./utils/proxyWithHeader.js"
+// import morgan from "morgan"
+// const port =process.env.PORT
+
+// const app=express()
+// app.use(cors({
+//     origin:process.env.FRONTEND_URL,
+//     credentials:true
+// }))
+// app.use(morgan("dev"))
+// app.use(cookieParser())
+// // app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
+// //     proxyReqPathResolver: (req) => `/api/auth${req.url}`
+// // }))
+
+// // app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
+// //     proxyReqPathResolver: (req) => `/api/auth${req.url}`,
+// //     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+// //         if (srcReq.headers.cookie) {
+// //             proxyReqOpts.headers.cookie = srcReq.headers.cookie
+// //         }
+// //         return proxyReqOpts
+// //     }
+// // }))
+
+// app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
+//     proxyReqPathResolver: (req) => `/api/auth${req.url}`,
+
+//     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+//         if (srcReq.headers.cookie) {
+//             proxyReqOpts.headers.cookie = srcReq.headers.cookie;
+//         }
+//         return proxyReqOpts;
+//     },
+
+//     userResDecorator: (proxyRes, proxyResData, userReq) => {
+//         console.log("AUTH UPSTREAM STATUS:", proxyRes.statusCode);
+//         console.log("AUTH UPSTREAM PATH:", userReq.originalUrl);
+//         console.log(
+//             "AUTH UPSTREAM BODY:",
+//             proxyResData.toString("utf8").slice(0, 300)
+//         );
+
+//         return proxyResData;
+//     }
+// }));
+
+
+// app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
+// app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
+// app.use("/api/billing",protect,proxyWithHeader(process.env.BILLING_SERVICE))
+// app.get("/api/me",protect,getCurrentUser)
+// app.get("/",(req,res)=>{
+//     res.json({message:"hello from gateway v5"})
+// })
+
+// app.listen(port,()=>{
+//     console.log(`gateway started at ${port}`)
+// })
+
 import express from "express"
 import dotenv from "dotenv"
 import proxy from "express-http-proxy"
@@ -17,43 +85,7 @@ app.use(cors({
 }))
 app.use(morgan("dev"))
 app.use(cookieParser())
-// app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
-//     proxyReqPathResolver: (req) => `/api/auth${req.url}`
-// }))
-
-// app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
-//     proxyReqPathResolver: (req) => `/api/auth${req.url}`,
-//     proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-//         if (srcReq.headers.cookie) {
-//             proxyReqOpts.headers.cookie = srcReq.headers.cookie
-//         }
-//         return proxyReqOpts
-//     }
-// }))
-
-app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
-    proxyReqPathResolver: (req) => `/api/auth${req.url}`,
-
-    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-        if (srcReq.headers.cookie) {
-            proxyReqOpts.headers.cookie = srcReq.headers.cookie;
-        }
-        return proxyReqOpts;
-    },
-
-    userResDecorator: (proxyRes, proxyResData, userReq) => {
-        console.log("AUTH UPSTREAM STATUS:", proxyRes.statusCode);
-        console.log("AUTH UPSTREAM PATH:", userReq.originalUrl);
-        console.log(
-            "AUTH UPSTREAM BODY:",
-            proxyResData.toString("utf8").slice(0, 300)
-        );
-
-        return proxyResData;
-    }
-}));
-
-
+app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
 app.use("/api/chat",protect,proxyWithHeader(process.env.CHAT_SERVICE))
 app.use("/api/agent",protect,proxyWithHeader(process.env.AGENT_SERVICE))
 app.use("/api/billing",protect,proxyWithHeader(process.env.BILLING_SERVICE))
@@ -65,4 +97,3 @@ app.get("/",(req,res)=>{
 app.listen(port,()=>{
     console.log(`gateway started at ${port}`)
 })
-
