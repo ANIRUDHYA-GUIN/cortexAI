@@ -82,11 +82,15 @@ dotenv.config();
 
 export const vectorStore = async (docs, collectionName) => {
     try {
-        const qdrantUrl = process.env.QDRANT_URL?.trim();
+        const qdrantUrl = process.env.QDRANT_URL?.trim().replace(/\/+$/, "");
         const apiKey = process.env.QDRANT_API_KEY?.trim();
 
         if (!qdrantUrl) {
             throw new Error("QDRANT_URL is missing.");
+        }
+
+        if (!apiKey) {
+            throw new Error("QDRANT_API_KEY is missing.");
         }
 
         if (!Array.isArray(docs) || docs.length === 0) {
@@ -96,52 +100,46 @@ export const vectorStore = async (docs, collectionName) => {
         console.log("PDF chunks:", docs.length);
         console.log("Collection:", collectionName);
         console.log("Qdrant URL configured:", Boolean(qdrantUrl));
-        console.log("Qdrant API key configured:", Boolean(apiKey));
 
         // Step 1: Test Gemini embeddings
-        console.log("STEP 1: Testing embeddings...");
+        console.log("STEP 1: Testing Gemini embeddings...");
 
         const testEmbedding = await embeddings.embedQuery(
-            "CortexAI connection test"
+            "CortexAI PDF connection test"
         );
 
         if (!testEmbedding?.length) {
-            throw new Error("Embedding provider returned an empty vector.");
+            throw new Error("Gemini returned an empty embedding.");
         }
 
-        console.log("Embedding test successful.");
+        console.log("Gemini embedding test successful.");
 
-        // Step 2: Test Qdrant connectivity and authentication
-        console.log("STEP 2: Testing Qdrant connection...");
+        // Step 2: Test Qdrant REST connectivity
+        console.log("STEP 2: Testing Qdrant REST connection...");
 
-        let response;
-
-        try {
-            response = await fetch(`${qdrantUrl.replace(/\/+$/, "")}/collections`, {
-                headers: apiKey ? { "api-key": apiKey } : {},
+        const response = await fetch(
+            `${qdrantUrl}/collections`,
+            {
+                headers: {
+                    "api-key": apiKey
+                },
                 signal: AbortSignal.timeout(15000)
-            });
-        } catch (error) {
-            console.error("QDRANT FETCH ERROR:", error);
-            console.error("QDRANT ERROR CAUSE:", error?.cause);
-
-            throw new Error(
-                `Cannot reach Qdrant: ${error.message}; cause: ${error?.cause?.code || "unknown"}`
-            );
-        }
+            }
+        );
 
         console.log("Qdrant HTTP status:", response.status);
 
         if (!response.ok) {
             const body = await response.text();
+
             throw new Error(
-                `Qdrant returned HTTP ${response.status}: ${body.slice(0, 300)}`
+                `Qdrant HTTP ${response.status}: ${body.slice(0, 300)}`
             );
         }
 
-        console.log("Qdrant connection successful.");
+        console.log("Qdrant REST connection successful.");
 
-        // Step 3: Create the vector store and insert document chunks
+        // Step 3: Create the vector store
         console.log("STEP 3: Creating Qdrant vector store...");
 
         const store = await QdrantVectorStore.fromDocuments(
@@ -149,16 +147,18 @@ export const vectorStore = async (docs, collectionName) => {
             embeddings,
             {
                 url: qdrantUrl,
+                apiKey,
                 collectionName,
-                ...(apiKey ? { apiKey } : {})
+                checkCompatibility: false
             }
         );
 
         console.log("Qdrant vector store created successfully.");
 
         return store;
+
     } catch (error) {
-        console.error("VECTOR STORE ERROR MESSAGE:", error?.message);
+        console.error("VECTOR STORE ERROR:", error?.message);
         console.error("VECTOR STORE ERROR CAUSE:", error?.cause);
         console.error("VECTOR STORE FULL ERROR:", error);
 
