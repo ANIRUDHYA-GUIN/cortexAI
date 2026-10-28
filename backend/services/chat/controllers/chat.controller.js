@@ -15,19 +15,50 @@ export const createConversation=async (req,res) => {
   }
 }
 
-export const getConversations=async (req,res) => {
-  try {
-    const userId=req.headers["x-user-id"]
-    console.log("userId",userId)
-    const conversations=await Conversation.find({
-        userId:userId
-    }).sort({updatedAt:-1})
+// export const getConversations=async (req,res) => {
+//   try {
+//     const userId=req.headers["x-user-id"]
+//     console.log("userId",userId)
+//     const conversations=await Conversation.find({
+//         userId:userId
+//     }).sort({updatedAt:-1})
 
-    return res.status(200).json(conversations)
-  } catch (error) {
-     return res.status(500).json({message:`get conversation error ${error}`})
-  }
-}
+//     return res.status(200).json(conversations)
+//   } catch (error) {
+//      return res.status(500).json({message:`get conversation error ${error}`})
+//   }
+// }
+export const getConversations = async (req, res) => {
+    try {
+        const userId = req.headers["x-user-id"];
+
+        console.log("GET CONVERSATIONS - userId:", userId);
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "Missing x-user-id header"
+            });
+        }
+
+        const conversations = await Conversation.find({ userId })
+            .sort({ updatedAt: -1 })
+            .lean();
+
+        console.log(
+            "GET CONVERSATIONS - count:",
+            conversations.length
+        );
+
+        return res.status(200).json(conversations);
+
+    } catch (error) {
+        console.error("GET CONVERSATIONS ERROR:", error);
+
+        return res.status(500).json({
+            message: "Failed to fetch conversations"
+        });
+    }
+};
 
 export const updateConversation=async (req,res) => {
   try {
