@@ -141,6 +141,9 @@ export const vectorStore = async (docs, collectionName) => {
 
         // Step 3: Create the vector store
         console.log("STEP 3: Creating Qdrant vector store...");
+        
+        console.log("QDRANT URL:", qdrantUrl);
+        console.log("QDRANT API KEY present:", Boolean(apiKey));
 
         const store = await QdrantVectorStore.fromDocuments(
             docs,
