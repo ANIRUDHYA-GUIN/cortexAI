@@ -1,19 +1,41 @@
 import Conversation from "../models/coversation.model.js"
 import Message from "../models/message.model.js"
 
-export const createConversation=async (req,res) => {
-  try {
-    const userId=req.headers["x-user-id"]
-    console.log("userId",userId)
-    const conversation=await Conversation.create({
-        userId:userId
-    })
+export const createConversation = async (req, res) => {
+    try {
+        console.log("CREATE CONVERSATION ROUTE HIT");
+        console.log("USER ID:", req.headers["x-user-id"]);
 
-    return res.status(200).json(conversation)
-  } catch (error) {
-     return res.status(500).json({message:`create conversation error ${error}`})
-  }
-}
+        const userId = req.headers["x-user-id"];
+
+        const conversation = await Conversation.create({
+            userId
+        });
+
+        return res.status(200).json(conversation);
+
+    } catch (error) {
+        console.error("CREATE CONVERSATION ERROR:", error);
+
+        return res.status(500).json({
+            message: `create conversation error ${error}`
+        });
+    }
+};
+
+// export const createConversation=async (req,res) => {
+//   try {
+//     const userId=req.headers["x-user-id"]
+//     console.log("userId",userId)
+//     const conversation=await Conversation.create({
+//         userId:userId
+//     })
+
+//     return res.status(200).json(conversation)
+//   } catch (error) {
+//      return res.status(500).json({message:`create conversation error ${error}`})
+//   }
+// }
 
 // export const getConversations=async (req,res) => {
 //   try {
