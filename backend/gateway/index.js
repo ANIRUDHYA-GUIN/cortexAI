@@ -12,10 +12,30 @@ import morgan from "morgan"
 const port =process.env.PORT
 
 const app=express()
+// app.use(cors({
+//     origin:process.env.FRONTEND_URL,
+//     credentials:true
+// }))
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "https://cortexai-frontend-xs4d.onrender.com",
+    "http://localhost:5173"
+].filter(Boolean);
+
 app.use(cors({
-    origin:process.env.FRONTEND_URL,
-    credentials:true
-}))
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            console.error("CORS blocked origin:", origin);
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
+
 app.use(morgan("dev"))
 app.use(cookieParser())
 app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
