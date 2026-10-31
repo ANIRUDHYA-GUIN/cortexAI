@@ -71,7 +71,7 @@ app.get("/",(req,res)=>{
 //     console.log(`gateway started at ${port}`)
 // })
 connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Gateway started at ${PORT}`);
+    app.listen(port, () => {
+        console.log(`Gateway started at ${port}`);
     });
 });
