@@ -9,7 +9,9 @@ import { getCurrentUser } from "./controllers/user.controller.js"
 import protect from "./middleware/auth.middleware.js"
 import { proxyWithHeader } from "./utils/proxyWithHeader.js"
 import morgan from "morgan"
+import connectDB from "./config/db.js";
 const port =process.env.PORT
+
 
 const app=express()
 // app.use(cors({
@@ -65,6 +67,11 @@ app.get("/",(req,res)=>{
     res.json({message:"hello from gateway v5"})
 })
 
-app.listen(port,()=>{
-    console.log(`gateway started at ${port}`)
-})
+// app.listen(port,()=>{
+//     console.log(`gateway started at ${port}`)
+// })
+connectDB().then(() => {
+    app.listen(PORT, () => {
+        console.log(`Gateway started at ${PORT}`);
+    });
+});
