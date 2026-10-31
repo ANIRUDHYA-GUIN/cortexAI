@@ -40,10 +40,20 @@ app.use(morgan("dev"))
 app.use(cookieParser())
 // app.use("/api/auth",proxy(process.env.AUTH_SERVICE))
 
+// app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
+//     proxyReqPathResolver: (req) => {
+//         console.log("AUTH PROXY PATH:", req.originalUrl);
+//         return req.originalUrl;
+//     }
+// }));
 app.use("/api/auth", proxy(process.env.AUTH_SERVICE, {
     proxyReqPathResolver: (req) => {
-        console.log("AUTH PROXY PATH:", req.originalUrl);
         return req.originalUrl;
+    },
+
+    userResHeaderDecorator(headers) {
+        console.log("AUTH RESPONSE SET-COOKIE:", headers["set-cookie"]);
+        return headers;
     }
 }));
 
