@@ -9,7 +9,7 @@
 
 
 import axios from "axios";
-import { auth } from "../firebase/firebase.js"; // Adjust path to your actual Firebase file
+import { auth } from "./firebase.js"; // Adjust path to your actual Firebase file
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_SERVER_URL,
